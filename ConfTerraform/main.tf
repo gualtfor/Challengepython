@@ -2,13 +2,22 @@ provider "aws" {
   region = var.region
 }
 
+resource "aws_s3_bucket" "depot" {
+  bucket = "when i going to save everything"
+
+  tags = {
+    Name        = "My bucket"
+    Environment = "Dev"
+  }
+}
+
 module "vpc" {
   source  = "cloudposse/vpc/aws"
   version = "0.28.1"
 
   cidr_block = "172.16.0.0/16"
 
-  context = module.this.context
+  
 }
 
 module "subnets" {
@@ -22,7 +31,7 @@ module "subnets" {
   nat_gateway_enabled  = false
   nat_instance_enabled = false
 
-  context = module.this.context
+  
 }
 
 module "rds_instance" {
@@ -60,5 +69,5 @@ module "rds_instance" {
     }
   ]
 
-  context = module.this.context
+  
 }
