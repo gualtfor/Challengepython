@@ -44,3 +44,5 @@ db_parameter_group = "mysql5.7"
 publicly_accessible = false
 
 apply_immediately = true
+
+bucket_name = ""

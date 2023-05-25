@@ -108,3 +108,14 @@ variable "apply_immediately" {
   type        = bool
   description = "Specifies whether any database modifications are applied immediately, or during the next maintenance window"
 }
+variable "bucket_name" {
+  type = string
+  description = "Name of the bucket"
+  
+}
+
+data "archive_file" "my_lambda_function" {
+  source_dir  = "${path.module}/lambda/"
+  output_path = "${path.module}/lambda.zip"
+  type        = "zip"
+}

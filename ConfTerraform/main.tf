@@ -3,10 +3,11 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "depot" {
-  bucket = "when i going to save everything"
+  bucket = "${var.bucket_name}-challenge"
+  force_destroy = true
 
   tags = {
-    Name        = "My bucket"
+    Name        = "My-bucket"
     Environment = "Dev"
   }
 }
@@ -14,8 +15,13 @@ resource "aws_s3_bucket" "depot" {
 module "vpc" {
   source  = "cloudposse/vpc/aws"
   version = "0.28.1"
-
   cidr_block = "172.16.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support = true
+ 
+  tags = {
+    Name = "Vpc-challenge"
+  }
 
   
 }
@@ -32,6 +38,24 @@ module "subnets" {
   nat_instance_enabled = false
 
   
+}
+resource "aws_security_group" "securitychallenge" {
+  name_prefix = "securitychallenge"
+  vpc_id = module.vpc.vpc_id
+ 
+  ingress {
+    from_port = 0
+    to_port = 3306
+    protocol = "tcp"
+    cidr_blocks = ["10.0.1.0/24"]
+  }
+ 
+  egress {
+    from_port = 0
+    to_port = 3306
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 module "rds_instance" {
@@ -51,7 +75,7 @@ module "rds_instance" {
   publicly_accessible  = var.publicly_accessible
   vpc_id               = module.vpc.vpc_id
   subnet_ids           = module.subnets.private_subnet_ids
-  security_group_ids   = [module.vpc.vpc_default_security_group_id]
+  security_group_ids   = [aws_security_group.securitychallenge.id] #[module.vpc.vpc_default_security_group_id]
   apply_immediately    = var.apply_immediately
   availability_zone    = var.availability_zone
   db_subnet_group_name = var.db_subnet_group_name
@@ -69,5 +93,48 @@ module "rds_instance" {
     }
   ]
 
-  
+  data "aws_iam_policy_document" "ConfLambda" {
+  statement {
+    actions   = ["s3:ListBucket",
+                  "s3:GetObject",
+                  "s3:CopyObject",
+                  "s3:HeadObject"]
+    resources = [aws_s3_bucket.depot.arn]
+    effect = "Allow"
+  }
+  statement {
+    actions   = ["rds:*"]
+    resources = [module.rds_instance.database_name.arn]
+    effect = "Allow"
+  }
+}
+
+  resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.database_name}_lambda_policy"
+  description = "${var.database_name}_lambda_policy"
+  policy = data.aws_iam_policy_document.ConfLambda
+  }
+
+
+  resource "aws_iam_role" "s3_copy_function" {
+    name = "app_${var.database_name}_lambda"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "Join_between_policy_and_roles" {
+ role = "${aws_iam_role.s3_copy_function.id}"
+ policy_arn = "${aws_iam_policy.lambda_policy.arn}"
 }
