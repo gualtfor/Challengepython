@@ -114,8 +114,28 @@ variable "bucket_name" {
   
 }
 
+variable "env" {
+  type = string
+  description = "Name of environment"
+  
+}
+
+variable "project" {
+  type = string
+  default = "Challenge-globant"
+  description = "Name of proyect"
+  
+}
+
 data "archive_file" "my_lambda_function" {
-  source_dir  = "${path.module}/lambda/"
-  output_path = "${path.module}/lambda.zip"
   type        = "zip"
+  source_dir  = "${path.module}/app/Funtionlambda/CopyS3.py"
+  output_path = "${path.module}/app/Functionlambda.zip"
+}
+
+variable "database_for_create_table" {
+  type = string
+  default = "DBcompany"
+  description = "Name of proyect"
+  
 }

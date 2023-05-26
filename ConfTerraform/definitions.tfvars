@@ -45,4 +45,7 @@ publicly_accessible = false
 
 apply_immediately = true
 
-bucket_name = ""
+bucket_name = "depot"
+
+env = "Dev"
+
