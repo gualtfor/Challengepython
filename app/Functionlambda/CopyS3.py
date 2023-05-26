@@ -1,4 +1,4 @@
-import json
+import re
 import boto3
 import csv
 import os
@@ -8,9 +8,10 @@ import SchemasTables as ST
 from mysql.connector import Error
 from mysql.connector import errorcode
 
+s3_client = boto3.client('s3')
 
 def lambda_handler(event, context):
-    s3_client = boto3.client('s3')
+    
 
     logger = logging.getLogger('INIT-DB')
     logger.setLevel(logging.INFO)
@@ -28,14 +29,19 @@ def lambda_handler(event, context):
         }
         
         
-    bucket = event['Records'][0]['bucket']['name']
-    csv_file = event['Records'][0]['object']['key']
-    csv_file_obj = s3_client.get_object(Bucket=bucket, key=csv_file)
+    bucket = event['Records'][0]['s3']['bucket']['name']
+    csv_file = event['Records'][0]['s3']['object']['key']
+    csv_file_obj = s3_client.get_object(Bucket=bucket, Key=csv_file)
     lines = csv_file_obj['Body'].read().decode('utf-8').split()
     results = []
-    for row in csv.DictReader(lines):
-        results.append(row.values())
-    print(results)
+    with open(lines, 'r') as csvfile:
+        csvread = csv.reader(csvfile)
+        for row in csvread:
+            results.append(row)
+    #print(results)
+    name_of_file = (lines.split('/')[-1].split('.csv')[0]) 
+    
+    
     
     # Check if the db exist
     logger.info('Checking the db exists...')
@@ -72,14 +78,18 @@ def lambda_handler(event, context):
             with conn.cursor() as cur:
                 for i, j in ST.Elements.df_schema.items():
                     sql_create_table = f'CREATE TABLE IF NOT EXISTS {i} ({ST.Elements.format_query(j)});'
-                    sql_insert_table = f'INSERT INTO {} ({ST.Elements.format_query(Listpar = ST.Elements.name_columns_csv[i])}) VALUES ({ST.Elements.format_query(Listpar = ST.Elements.name_columns_csv[i], inserdata=1)});'
                     cur.execute(sql_create_table)
-                    cur.executemany(sql_insert_table, results)
+                    if lines.endswith(".csv") and name_of_file == i:
+                        sql_insert_table = f'INSERT INTO {name_of_file} ({ST.Elements.format_query(Listpar = ST.Elements.name_columns_csv[i])}) VALUES ({ST.Elements.format_query(Listpar = ST.Elements.name_columns_csv[i], inserdata=1)});'
+                        cur.executemany(sql_insert_table, results)
                     
         logger.info('Created tables')
         return {
-            'created': 'true'
+            'created': 'true',
+            'statusCode': 200,
+            'body': 'Record ' + event['id'] + ' Added'
         }
+    
     except Exception as e:
         logger.exception(e)
         logger.error('Unable to create table')

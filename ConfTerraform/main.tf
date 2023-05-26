@@ -12,6 +12,18 @@ resource "aws_s3_bucket" "depot" {
   }
 }
 
+resource "aws_s3_bucket_object" "object" {
+  # this is optional, because i think that is better to upload the file directly to aws s3
+
+  bucket = aws_s3_bucket.depot.id
+  key    = "Libraries_of_python"
+  acl    = "private"  # or can be "public-read"
+  source = "C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/libraries/libraries.zip"
+
+  etag = filemd5("C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/libraries/libraries.zip")
+
+}
+
 module "vpc" {
   source  = "https://github.com/terraform-aws-modules/terraform-aws-vpc/blob/master/examples/simple"
 
@@ -187,6 +199,7 @@ resource "aws_lambda_function" "s3_copy_function" {
    role = aws_iam_role.s3_copy_function.arn
    handler = "CopyS3.handler"
    runtime = "python3.8"
+   layers = [module.layer.lambda_layer_arn]
    environment {
        variables = {
            APP_DB_USER = "${var.database_user}"
@@ -198,4 +211,16 @@ resource "aws_lambda_function" "s3_copy_function" {
            PROJECT = "${var.project}"
        }
    }
+}
+
+
+module "layer" {
+  source              = "terraform-aws-modules/lambda/aws"
+  create_layer        = true
+  layer_name          = "dependencies_of_code"
+  description         = "You need to install the libraries"
+  compatible_runtimes = ["python3.8"]
+  source_path         = "${path.module}/app/libraries"
+  store_on_s3         = true
+  s3_bucket           = aws_s3_bucket.depot.id
 }

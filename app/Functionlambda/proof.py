@@ -41,6 +41,9 @@ if __name__ == "__main__":
         print(f'CREATE TABLE IF NOT EXISTS {i} ({presto.format_query(j)});')
         print(f'INSERT INTO {i} ({presto.format_query(Listpar =presto.name_columns_csv[i])})\
             VALUES ({presto.format_query(Listpar =presto.name_columns_csv[i], inserdata=1)});')
+    f = 'primary/csvdata/filecsv.csv'
+    file_name = f.split('/')[-1].split('.csv')[0]
+    print(file_name)
     
     
 
