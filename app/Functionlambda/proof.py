@@ -1,5 +1,6 @@
 from sqlalchemy.types import INTEGER, String
-class estra():
+import SchemasTables as ST
+""" class estra():
     name_columns_csv = {'hired_employees': ["id", "name", "datetime", "department_id", "job_id"],
                        'departments': ["id", "department"], 'jobs': ["id", "job"]}
        
@@ -32,19 +33,17 @@ class estra():
                 ListParameters.append('%s')
             return ', '.join(ListParameters)
         except Exception :
-            raise RuntimeError("Please confirm your choise")
+            raise RuntimeError("Please confirm your choise")git 
             
 
-if __name__ == "__main__":
-    presto = estra()
-    for i, j in presto.df_schema.items():
-        print(f'CREATE TABLE IF NOT EXISTS {i} ({presto.format_query(j)});')
-        print(f'INSERT INTO {i} ({presto.format_query(Listpar =presto.name_columns_csv[i])})\
-            VALUES ({presto.format_query(Listpar =presto.name_columns_csv[i], inserdata=1)});')
-    f = 'primary/csvdata/filecsv.csv'
-    file_name = f.split('/')[-1].split('.csv')[0]
-    print(file_name)
+if __name__ == "__main__":  
+    #presto = estra() """
+presto = ST.Elements()
+for i, j in presto.df_schema.items():
+    print(f'CREATE TABLE IF NOT EXISTS {i} ({presto.format_query(j)});')
+    print(f'INSERT INTO {i} ({presto.format_query(Listpar =presto.name_columns_csv[i])}) VALUES ({presto.format_query(Listpar =ST.Elements.name_columns_csv[i], inserdata=1)});')
     
-    
-
+f = 'primary/csvdata/filecsv.csv'
+file_name = f.split('/')[-1].split('.csv')[0]
+print(file_name)
     

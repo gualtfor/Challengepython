@@ -1,6 +1,6 @@
-region = "us-east-2"
+region = "us-east-1"
 
-availability_zones = ["us-east-2a", "us-east-2b"]
+availability_zones = ["us-east-1a", "us-east-1b"]
 
 namespace = "eg"
 
@@ -12,7 +12,7 @@ deletion_protection = false
 
 database_name = "ChallengePython"
 
-database_user = "gualfor"
+database_user = "gualtfor"
 
 database_password = "admin1234"
 
@@ -31,15 +31,15 @@ allocated_storage = 5
 engine = "mysql"
 
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Concepts.VersionMgmt.html
-engine_version = "8"
+engine_version = "5.7"
 
 #major_engine_version = "5.7"
-major_engine_version = "5.7"
+major_engine_version = "8"
 
 instance_class = "db.t2.small"
 
 #db_parameter_group = "mysql5.7"
-db_parameter_group = "mysql5.7"
+db_parameter_group = "default.mysql5.7"
 
 publicly_accessible = false
 

@@ -1,4 +1,3 @@
-import re
 import boto3
 import csv
 import os
@@ -41,7 +40,11 @@ def lambda_handler(event, context):
     #print(results)
     name_of_file = (lines.split('/')[-1].split('.csv')[0]) 
     
-    
+    def connection(host, database, user, password):
+        with mysql.connector.connect(host, database, user, password) as conn:
+            conn.autocommit = True
+        return conn
+        
     
     # Check if the db exist
     logger.info('Checking the db exists...')
@@ -76,11 +79,12 @@ def lambda_handler(event, context):
         with mysql.connector.connect(host=db_host, database=app_db_name, user=app_db_user, password=app_db_pass) as conn:
             conn.autocommit = True
             with conn.cursor() as cur:
-                for i, j in ST.Elements.df_schema.items():
-                    sql_create_table = f'CREATE TABLE IF NOT EXISTS {i} ({ST.Elements.format_query(j)});'
+                schema = ST.Elements()
+                for i, j in schema.df_schema.items():
+                    sql_create_table = f'CREATE TABLE IF NOT EXISTS {i} ({schema.format_query(j)});'
                     cur.execute(sql_create_table)
                     if lines.endswith(".csv") and name_of_file == i:
-                        sql_insert_table = f'INSERT INTO {name_of_file} ({ST.Elements.format_query(Listpar = ST.Elements.name_columns_csv[i])}) VALUES ({ST.Elements.format_query(Listpar = ST.Elements.name_columns_csv[i], inserdata=1)});'
+                        sql_insert_table = f'INSERT INTO {name_of_file} ({schema.format_query(Listpar = schema.name_columns_csv[i])}) VALUES ({schema.format_query(Listpar = schema.name_columns_csv[i], inserdata=1)});'
                         cur.executemany(sql_insert_table, results)
                     
         logger.info('Created tables')
