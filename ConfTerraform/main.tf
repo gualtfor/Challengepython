@@ -34,30 +34,6 @@ resource "aws_db_subnet_group" "subnet" {
     Name = "subnets"
   }
 }
-/* resource "aws_db_subnet_group" "subnet" {
-  
-  vpc_id            = module.vpc.vpc_id
-  cidr_block        = "10.0.0.0/16" 
-  availability_zone = "us-east-1a"
-
-  tags = {
-    Name = "subnets_challenge"
-  }
-} */
-/* module "subnets" {
-  source              = "clouddrove/subnet/aws"
-  version             = "1.3.0"
-  name                = "subnets_challenge"
-  environment         = var.env
-  label_order         = ["name", "environment"]
-  availability_zones  = var.availability_zones
-  vpc_id              = module.vpc.vpc_id
-  type                = "private"
-  nat_gateway_enabled = true
-  cidr_block          = "10.0.0.0/16"
-  ipv6_cidr_block     = module.vpc.database_subnets_ipv6_cidr_blocks
-  public_subnet_ids   = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
-} */
 
 
 resource "aws_security_group" "securitychallenge" {
@@ -109,7 +85,7 @@ data "aws_iam_policy_document" "ConfLambda" {
     actions = ["s3:ListBucket",
       "s3:GetObject",
       "s3:CopyObject",
-    "s3:HeadObject"]
+    "s3:HeadObject", "s3-object-lambda:GetObject", "s3-object-lambda:GetObjectAcl", "s3-object-lambda:GetObjectLegalHold"]
     resources = [aws_s3_bucket.depot.arn]
     effect    = "Allow"
   }
@@ -166,6 +142,25 @@ resource "aws_lambda_permission" "allow_lambda_bucket" {
   source_arn    = aws_s3_bucket.depot.arn
 }
 
+resource "aws_s3_object" "folder1" {
+    bucket = aws_s3_bucket.depot.id
+    #acl    = "public"
+    key    = "datacsv/"
+    #source = "/null"
+}
+
+resource "aws_s3_bucket_notification" "bucket_terraform_notification" {
+   bucket             = "${aws_s3_bucket.depot.id}"
+   lambda_function {
+       lambda_function_arn  = "${aws_lambda_function.s3_copy_function.arn}"
+       events               = ["s3:ObjectCreated:*"]
+       filter_prefix        = "datacsv/"
+       filter_suffix        = ".csv"
+   }
+   depends_on = [ aws_lambda_permission.allow_lambda_bucket ]
+   
+}
+
 resource "aws_s3_object" "my_function_to_bucket" {
   bucket = aws_s3_bucket.depot.id
   key    = "${filemd5(local.my_function_source)}.zip"
@@ -179,7 +174,7 @@ resource "aws_lambda_function" "s3_copy_function" {
   source_code_hash = local.my_function_source # filebase64sha256(data.archive_file.my_lambda_function.output_path)
   function_name    = "${var.database_name}_s3_copy_lambda"
   role             = aws_iam_role.s3_copy_function.arn
-  handler          = "CopyS3.handler"
+  handler          = "CopyS3.lambda_handler"
   runtime          = "python3.8"
   layers           = [module.layer.lambda_layer_arn]
   environment {
@@ -191,10 +186,16 @@ resource "aws_lambda_function" "s3_copy_function" {
       DB_INSTANCE_NAME = "${aws_db_instance.rds_instance.db_name}"
       ENV              = "${var.env}"
       PROJECT          = "${var.project}"
+      Serverless       = "Terraform"
     }
   }
 }
 
+/* resource "aws_s3_object" "my_libraries_to_bucket" {
+  bucket = aws_s3_bucket.depot.id
+  key    = "${filemd5(local.my_library_source)}.zip"
+  source = local.my_function_source
+} */
 
 module "layer" {
   source              = "terraform-aws-modules/lambda/aws"
@@ -202,7 +203,9 @@ module "layer" {
   layer_name          = "dependencies_of_code"
   description         = "You need to install the libraries"
   compatible_runtimes = ["python3.8"]
-  source_path         = local.my_library_source
+  source_path         = "C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/libraries/build"
   store_on_s3         = true
   s3_bucket           = aws_s3_bucket.depot.id
+
 }
+

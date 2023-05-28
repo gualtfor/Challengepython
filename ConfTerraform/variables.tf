@@ -152,7 +152,7 @@ variable "database_for_create_table" {
 }
 locals {
   my_function_source = "C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/Functionlambda/CopyS3.zip"
-  my_library_source  = "C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/libraries/python.zip"
+  my_library_source  = "C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/libraries/build/python.zip"
 }
 
 /* data "archive_file" "my_lambda_function" {

@@ -29,6 +29,7 @@ def lambda_handler(event, context):
         
         
     bucket = event['Records'][0]['s3']['bucket']['name']
+    event['Records'][0]['s3']['bucket']['name']
     csv_file = event['Records'][0]['s3']['object']['key']
     csv_file_obj = s3_client.get_object(Bucket=bucket, Key=csv_file)
     lines = csv_file_obj['Body'].read().decode('utf-8').split()
