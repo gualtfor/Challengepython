@@ -10,7 +10,6 @@ from mysql.connector import errorcode
 s3_client = boto3.client('s3')
 
 def lambda_handler(event, context):
-    
 
     logger = logging.getLogger('INIT-DB')
     logger.setLevel(logging.INFO)
@@ -34,10 +33,8 @@ def lambda_handler(event, context):
     csv_file_obj = s3_client.get_object(Bucket=bucket, Key=csv_file)
     lines = csv_file_obj['Body'].read().decode('utf-8').split()
     results = []
-    with open(lines, 'r') as csvfile:
-        csvread = csv.reader(csvfile)
-        for row in csvread:
-            results.append(row)
+    for row in csv.DictReader(lines):
+        results.append(row.values())
     #print(results)
     name_of_file = (lines.split('/')[-1].split('.csv')[0]) 
     
