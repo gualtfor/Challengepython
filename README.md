@@ -27,6 +27,107 @@ Clarifications
 * You decide the destination database type, but it must be a SQL database.
 * The CSV file is comma separated. 
 
+__Answer section 1__:
+
+I chose the Fastapi and Sqlalchemy libraries for creating the database and the platform of my API. I used the FastAPI because this library has a simple interface and interaction with the client. For the other part,  the functions, methods, and classes are easy to understand.
+In addition, The library Sqlalchemy is easy to manage and has methods that are used to check the format and the content of tables.
+
+The files that compose the API are:
+main.py is the file that help me to create the environment and the schema to load and ask the information about the number of employees hired and the distribution of them in the time.
+
+Folder config
+
+context.py is the file that connect our API with the database and established a session.
+
+```py
+# In ths part i could connect with the database
+engine = create_engine(
+    "postgresql+psycopg2://{0}:{1}@{2}:{3}/{4}".format(user, password, host, port, database)
+    
+)
+```
+```py
+# In this part i establish the session of my databse
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+```
+
+
+
+
+Folder views.
+query.py has the code of in SQL to make the queries in the database.
+
+
+requirements.py take the queries of the file queries.py and the session of the file config.py and called a function asynchronous that made the queries to the database. Then called the method that retrieve the answer and put that information in a csv file.
+
+```py
+router = APIRouter()
+
+# this is a decorator function that made a get and then called the question function
+@router.get("/requirements/{query}", tags=["Queries"])
+async def question(query, db: session = Depends(get_db)):
+    df = pd.read_sql_query(sql[query], engine) # read the query
+    stream = io.StringIO()
+    df.to_csv(stream, index=False) # save the answer
+    response = StreamingResponse(iter([stream.getvalue()]), media_type="text/csv") # get the information for display it in the screen
+    response.headers["Content-Disposition"] = "attachment; filename=output.csv"
+
+    return response
+```
+
+v_uploads In this file exits all the method that implemented to check the schema and the content of file like null and the certain data was an integer. In the end of the code i filter all the errors an drop of the file and get a good file that is delivers to the database.
+
+```py
+# here the code made two function for checking the informacion of each table the first is for check the data is a integer and the second function is for identify the presents of NAN values.
+int_validation = [CustomElementValidation(
+    lambda i: check_int(i), lambda i: print(i))]
+null_validation = [CustomElementValidation(
+    lambda d: d is not np.nan, lambda i: print(i))]
+```
+one of the models for checking the format can be this:
+
+```py
+# take each schema of each table and check if values are Null of integer with the funcion Column of library pandas_schema
+sch_employee = Schema([
+    Column('id', null_validation + int_validation),
+    Column('name', null_validation),
+    Column('datetime', null_validation),
+    Column('department_id', null_validation + int_validation),
+    Column('job_id', null_validation + int_validation)
+])
+```
+
+```py
+# this the funcion that upload each file
+@router.post("/upload/{table}", tags=["Upload Files"])
+async def create_upload_file(table, file: UploadFile = File(...)):
+    contents = await file.read() # await the readinf of file 
+    s = str(contents, 'utf-8')
+    data = StringIO(s)
+    df = pd.read_csv(data, names=name_columns_csv[table], sep=',') # Read the csv file
+    if table == 'hired_employees': # check what table is.
+        errors = sch_employee.validate(df)
+    if table == 'jobs':
+        errors = sch_jobs.validate(df)
+    if table == 'departments':
+        errors = sch_departments.validate(df)
+```
+
+
+Folder schemas
+tables.py In this files i checked el format of the data of schema of each table and wrote the structure.
+
+
 ## _Section 2: SQL_
 You need to explore the data that was inserted in the previous section. The stakeholders ask for some specific metrics they need. You should create an end-point for each requirement. 
 
@@ -36,7 +137,54 @@ You need to explore the data that was inserted in the previous section. The stak
 
 * List of ids, name and number of employees hired of each department that hired more employees than the mean of employees hired in 2021 for all the departments, ordered by the number of employees hired (descending).  
 
+__Answer section2:__
 
+The file query.py has the syntax necessarily for making the questions that refers this point.
+
+Query 1:
+
+```sql
+select department, job,
+	count(case cuarter when 1 then cuarter  end) as "Q1",
+	count(case cuarter when 2 then cuarter  end) as "Q2",
+	count(case cuarter when 3 then cuarter  end) as "Q3",
+	count(case cuarter when 4 then cuarter  end) as "Q4"
+	from
+	(
+		select d.department, j.job, extract (quarter from TO_TIMESTAMP(
+		    e.datetime ,'YYYY-MM-DD TO:MI:SS')) as cuarter
+		from "hired_employees" e
+			inner join "departments" d
+			on e.department_id = d.id
+			inner join "jobs" j
+			on e.job_id = j.id
+			where substring(e.datetime,1,4) = '2021') as temp
+	group by department, job
+    
+```
+
+Query 2:
+
+```sql
+select e.department_id as id, d.department, count(*) as hired 
+            from "hired_employees" e
+                inner join "departments" d
+                on e.department_id = d.id
+                where substring(e.datetime,1,4) = '2021'
+                group by e.department_id, d.department
+                having count(*)> (select avg(t.poor) from (select e.department_id, count(*) as poor from "hired_employees" e
+									inner join "jobs" j
+									on e.job_id = j.id
+									where substring(e.datetime,1,4) = '2021'
+									group by e.department_id) t)
+```
+If all the jod is good the result is:
+
+![API docs](image/result.jpg)
+
+and if you what to know that everythong is running good, please you look the response body.
+
+![API docs](image/checking.jpg)
 ## **Bonus Track! Cloud, Testing & Containers**
 
 Add the following to your solution to make it more robust:

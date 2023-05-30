@@ -22,7 +22,7 @@ int_validation = [CustomElementValidation(
 null_validation = [CustomElementValidation(
     lambda d: d is not np.nan, lambda i: print(i))]
 
-sch_emp = Schema([
+sch_employee = Schema([
     Column('id', null_validation + int_validation),
     Column('name', null_validation),
     Column('datetime', null_validation),
@@ -36,7 +36,7 @@ sch_jobs = Schema([
         Column('job', null_validation)
     ])
 
-sch_dep = Schema([
+sch_departments = Schema([
     Column('id', null_validation + int_validation),
     Column('department', null_validation)
 ])
@@ -50,11 +50,11 @@ async def create_upload_file(table, file: UploadFile = File(...)):
     data = StringIO(s)
     df = pd.read_csv(data, names=name_columns_csv[table], sep=',')
     if table == 'hired_employees':
-        errors = sch_emp.validate(df)
+        errors = sch_employee.validate(df)
     if table == 'jobs':
         errors = sch_jobs.validate(df)
     if table == 'departments':
-        errors = sch_dep.validate(df)
+        errors = sch_departments.validate(df)
     errors_index_rows = [e.row for e in errors]
     data_clear = df.drop(index=errors_index_rows)
     data_clear.to_sql(table, engine, if_exists='append', index=False, chunksize=1000, dtype=df_schema[table])

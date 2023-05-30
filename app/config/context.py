@@ -4,9 +4,9 @@ from sqlalchemy.orm import sessionmaker
 
 user = 'gualtfor'
 password = 'admin1234'
-host = 'postgres-db'
+host = 'postgres-db' #'challengedb.cwaajgnim8t3.us-east-1.rds.amazonaws.com'
 port = 5432
-database = 'postgres'
+database = 'postgres' #challengedb'
 
 engine = create_engine(
     "postgresql+psycopg2://{0}:{1}@{2}:{3}/{4}".format(user, password, host, port, database)

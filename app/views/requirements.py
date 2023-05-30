@@ -1,5 +1,4 @@
 import imp
-from operator import concat
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import session
 from fastapi.responses import StreamingResponse
@@ -11,7 +10,7 @@ from app.views.queries import sql
 router = APIRouter()
 
 @router.get("/requirements/{query}", tags=["Queries"])
-async def consulta(query, db: session = Depends(get_db)):
+async def question(query, db: session = Depends(get_db)):
     df = pd.read_sql_query(sql[query], engine)
     stream = io.StringIO()
     df.to_csv(stream, index=False)
