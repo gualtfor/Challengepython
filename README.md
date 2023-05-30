@@ -32,6 +32,16 @@ __Answer section 1__:
 I chose the Fastapi and Sqlalchemy libraries for creating the database and the platform of my API. I used the FastAPI because this library has a simple interface and interaction with the client. For the other part,  the functions, methods, and classes are easy to understand.
 In addition, The library Sqlalchemy is easy to manage and has methods that are used to check the format and the content of tables.
 
+How you can execute the programm:
+you need docker
+
+go to the Challengepython folder and execute:
+
+```docker
+docker-compose up -d
+
+```
+
 The files that compose the API are:
 main.py is the file that help me to create the environment and the schema to load and ask the information about the number of employees hired and the distribution of them in the time.
 
@@ -141,6 +151,10 @@ __Answer section2:__
 
 The file query.py has the syntax necessarily for making the questions that refers this point.
 
+How to execute the queries:
+
+***write query1 and query2 in the description field. to activate the field please hit in try it out.***
+
 Query 1:
 
 ```sql
@@ -187,6 +201,8 @@ and if you what to know that everythong is running good, please you look the res
 ![API docs](image/checking.jpg)
 
 if you have some issue please, check the name of the table and the file. 
+
+
 ## **Bonus Track! Cloud, Testing & Containers**
 
 Add the following to your solution to make it more robust:
