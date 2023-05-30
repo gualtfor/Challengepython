@@ -42,6 +42,9 @@ docker-compose up -d
 
 ```
 
+and hit in the browser: http://127.0.0.1:3000
+
+
 The files that compose the API are:
 main.py is the file that help me to create the environment and the schema to load and ask the information about the number of employees hired and the distribution of them in the time.
 
@@ -157,6 +160,8 @@ How to execute the queries:
 
 Query 1:
 
+The link that you download the file: http://127.0.0.1:3000/requirements/query1
+
 ```sql
 select department, job,
 	count(case cuarter when 1 then cuarter  end) as "Q1",
@@ -177,7 +182,10 @@ select department, job,
     
 ```
 
+
 Query 2:
+
+The link that you download the file: http://127.0.0.1:3000/requirements/query1
 
 ```sql
 select e.department_id as id, d.department, count(*) as hired 
@@ -192,13 +200,13 @@ select e.department_id as id, d.department, count(*) as hired
 									where substring(e.datetime,1,4) = '2021'
 									group by e.department_id) t)
 ```
-If all the jod is good the result is:
+If all the job is good the result is:
 
-![API docs](app/image/result.jpg)
+![API docs1](app/image/result.jpg)
 
 and if you what to know that everythong is running good, please you look the response body.
 
-![API docs](app/image/checking.jpg)
+![API docs2](app/image/checking.jpg)
 
 if you have some issue please, check the name of the table and the file. 
 
