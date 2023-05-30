@@ -194,11 +194,11 @@ select e.department_id as id, d.department, count(*) as hired
 ```
 If all the jod is good the result is:
 
-![API docs](image/result.jpg)
+![API docs](app/image/result.jpg)
 
 and if you what to know that everythong is running good, please you look the response body.
 
-![API docs](image/checking.jpg)
+![API docs](app/image/checking.jpg)
 
 if you have some issue please, check the name of the table and the file. 
 
