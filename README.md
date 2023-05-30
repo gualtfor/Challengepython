@@ -185,6 +185,8 @@ If all the jod is good the result is:
 and if you what to know that everythong is running good, please you look the response body.
 
 ![API docs](image/checking.jpg)
+
+if you have some issue please, check the name of the table and the file. 
 ## **Bonus Track! Cloud, Testing & Containers**
 
 Add the following to your solution to make it more robust:
