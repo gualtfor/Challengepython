@@ -48,7 +48,7 @@ or if you do not want to deploy the API in your computer, please open in your br
  http://54.227.18.146/docs o 
  http://54.227.18.146:80,  
  
- everyting is loading in the platform cloud of AWS.
+ everything is loading in the platform cloud of AWS.
 
 
 The files that compose the API are:
