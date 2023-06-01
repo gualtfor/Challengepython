@@ -44,6 +44,12 @@ docker-compose up -d
 
 and hit in the browser: http://127.0.0.1:3000
 
+or if you do not want to deploy the API in your computer, please open in your browser the web page:
+ http://54.227.18.146/docs o 
+ http://54.227.18.146:80,  
+ 
+ everyting is loading in the platform cloud of AWS.
+
 
 The files that compose the API are:
 main.py is the file that help me to create the environment and the schema to load and ask the information about the number of employees hired and the distribution of them in the time.
@@ -215,11 +221,19 @@ if you have some issue please, check the name of the table and the file.
 
 Add the following to your solution to make it more robust:
 * Host your architecture in any public cloud (using the services you consider more adequate)
+
+Answer: All the infrastructure is dealing in AWS, the database, and the API by way of containers.
+
 * Add automated tests to the API
     * You can use whichever library that you want
     * Different tests types, if necessary, are welcome
+
+Answer: All the checking of types and formats are dealing with pandas_schema and sqlalchemy.types.
+
 * Containerize your application
     * Create a Dockerfile to deploy the package
+
+Answer: The API is deploying in ECS (Elastic Container Service) with one ELB (Elastic Load Balancer) for the database I used a RDS of Postgres with all infrastructure of a VPC. All information is registered in the file main.tf. in the folder ConfTerraform.
 
 
 

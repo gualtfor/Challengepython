@@ -11,22 +11,25 @@ variable "availability_zones" {
 
 variable "database_name" {
   type        = string
-  default     = "DB"
+  default     = "postgresdb"
   description = "The name of the database to create when the DB instance is created"
 }
 
 variable "database_user" {
   type        = string
+  default     = "gualtfor"
   description = "Username for the primary DB user"
 }
 
 variable "database_password" {
   type        = string
+  default     = "admin1234"
   description = "Password for the primary DB user"
 }
 
 variable "database_port" {
   type        = number
+  default     = 5432
   description = "Database port (_e.g._ `3306` for `MySQL`). Used in the DB Security Group to allow access to the DB instance from the provided `security_group_ids`"
 }
 
@@ -68,13 +71,13 @@ variable "storage_encrypted" {
 
 variable "allocated_storage" {
   type        = number
-  default     = 5
+  default     = 20
   description = "The allocated storage in GBs"
 }
 
 variable "engine" {
   type        = string
-  default     = "mysql"
+  default     = "postgres"
   description = "Database engine type"
   # http://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html
   # - mysql
@@ -85,28 +88,28 @@ variable "engine" {
 
 variable "engine_version" {
   type        = string
-  default     = "5.7"
+  default     = "14.3"
   description = "Database engine version, depends on engine type"
   # http://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html
 }
 
 variable "major_engine_version" {
   type        = string
-  default     = "8"
+  default     = "15.3"
   description = "Database MAJOR engine version, depends on engine type"
   # https://docs.aws.amazon.com/cli/latest/reference/rds/create-option-group.html
 }
 
 variable "instance_class" {
   type        = string
-  default     = "db.t2.small"
+  default     = "db.t3.micro"
   description = "Class of RDS instance"
   # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
 }
 
 variable "db_parameter_group" {
   type        = string
-  default     = "default.mysql5.7"
+  default     = "postgres14"
   description = "Parameter group, depends on DB engine used"
   # "mysql5.6"
   # "postgres9.5"
@@ -114,7 +117,7 @@ variable "db_parameter_group" {
 
 variable "publicly_accessible" {
   type        = bool
-  default     = false
+  default     = true
   description = "Determines if database can be publicly available (NOT recommended)"
 }
 
@@ -155,11 +158,6 @@ locals {
   my_library_source  = "C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/libraries/build/python.zip"
 }
 
-/* data "archive_file" "my_lambda_function" {
-  type              = "zip"
-  source_dir       = "${path.module}/app/Funtionlambda/CopyS3."
-  output_file_mode  = "0666"
-  output_path       = "${path.module}/app/Functionlambda/CopyS3.zip"
-} */
+
 
 
