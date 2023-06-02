@@ -46,11 +46,12 @@ and hit in the browser: http://127.0.0.1:3000
 
 or if you do not want to deploy the API in your computer, please open in your browser the web page:
 
- [http://54.227.18.146/docs](http://54.227.18.146/docs) o 
- [http://54.227.18.146:80](http://54.227.18.146:80),  
+ [http://18.208.208.111/docs](http://18.208.208.111/docs) o 
+
+ [http://18.208.208.111:80](http://18.208.208.111:80)  
  
- everything is loading in the platform cloud of AWS.
- at the night all service will be turn off.
+ Everything is loading in the platform cloud of AWS.
+ At the night all service will be turn off.
 
 
 The files that compose the API are:
