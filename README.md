@@ -46,9 +46,9 @@ and hit in the browser: http://127.0.0.1:3000
 
 or if you do not want to deploy the API in your computer, please open in your browser the web page:
 
- [http://18.208.208.111/docs](http://18.208.208.111/docs) o 
+ [http://18.207.105.116/docs](http://18.207.105.116/docs) o 
 
- [http://18.208.208.111:80](http://18.208.208.111:80)  
+ [http://load-balancer-dev-316112302.us-east-1.elb.amazonaws.com](http://load-balancer-dev-316112302.us-east-1.elb.amazonaws.com)  
  
  Everything is loading in the platform cloud of AWS.
  At the night all service will be turn off.
