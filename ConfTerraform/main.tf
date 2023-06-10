@@ -62,7 +62,7 @@ resource "aws_subnet" "main3" {
   cidr_block = "10.0.3.0/24"
 
   tags = {
-    Name = "Main2"
+    Name = "Main3"
   }
 }
 
@@ -195,7 +195,27 @@ resource "aws_ecs_task_definition" "app_task" {
           "hostPort": 80,
           "protocol": "tcp",
           "appProtocol": "http"
-      },
+      }
+      ],
+      "memory": 512,
+      "cpu": 256
+      
+    }
+  ]
+  DEFINITION
+  runtime_platform {
+        cpu_architecture = "X86_64"
+        operating_system_family = "LINUX"
+      }
+  requires_compatibilities = ["FARGATE"] # use Fargate as the launch type  i take out , "EC2"
+  network_mode             = "awsvpc"    # add the AWS VPN network mode as this is required for Fargate
+  memory                   = 512         # Specify the memory the container requires
+  cpu                      = 256         # Specify the CPU the container requires
+  execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
+
+}
+
+/* ,
       {
           "name": "app-first-task-3000-tcp",
           "containerPort": 3000,
@@ -209,27 +229,7 @@ resource "aws_ecs_task_definition" "app_task" {
           "hostPort": 5432,
           "protocol": "tcp",
           "appProtocol": "http"
-      }
-      ],
-      "memory": 512,
-      "cpu": 256
-      
-    }
-  ]
-  DEFINITION
-  runtime_platform {
-        cpu_architecture = "X86_64"
-        operating_system_family = "LINUX"
-      }
-  requires_compatibilities = ["FARGATE", "EC2"] # use Fargate as the launch type
-  network_mode             = "awsvpc"    # add the AWS VPN network mode as this is required for Fargate
-  memory                   = 512         # Specify the memory the container requires
-  cpu                      = 256         # Specify the CPU the container requires
-  execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
-
-}
-
-
+      } */
 resource "aws_iam_role" "ecsTaskExecutionRole" {
   name               = "ecsTaskExecutionRole"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
@@ -264,6 +264,14 @@ resource "aws_security_group" "service_security_groupforloadbalancer" {
     # Only allowing traffic in from the load balancer security group
     #security_groups = ["${aws_security_group.securitychallenge.id}"]
   }
+/*   ingress {
+    from_port = 3000  
+    to_port   = 3000
+    protocol  = "TCP"
+    cidr_blocks = ["0.0.0.0/0"]
+    # Only allowing traffic in from the load balancer security group
+    #security_groups = ["${aws_security_group.securitychallenge.id}"]
+  } */
 
   egress {
     from_port   = 0
@@ -277,7 +285,7 @@ resource "aws_security_group" "service_security_groupforloadbalancer" {
 resource "aws_lb" "application_load_balancer" {
   name               = "load-balancer-dev" #load balancer name
   load_balancer_type = "application"
-  subnets = ["${aws_subnet.main1.id}", "${aws_subnet.main2.id}"]
+  subnets = ["${aws_subnet.main1.id}", "${aws_subnet.main2.id}", "${aws_subnet.main3.id}"]
   # security group
   security_groups = ["${aws_security_group.service_security_groupforloadbalancer.id}"] # it is possible that this security group does not be
 }
@@ -290,6 +298,10 @@ resource "aws_lb_target_group" "target_group" {
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = module.vpc.vpc_id # default VPC
+  health_check {
+    matcher     = "200-307"    
+  }
+  
 }
 
 resource "aws_lb_listener" "listener" {
@@ -309,17 +321,174 @@ resource "aws_ecs_service" "app_service" {
   task_definition = "${aws_ecs_task_definition.app_task.arn}" # Reference the task that the service will spin up
   launch_type     = "FARGATE"
   desired_count   = 1 # Set up the number of containers to 3
-  health_check_grace_period_seconds = 180
+  #health_check_grace_period_seconds = 180
 
   load_balancer {
     target_group_arn = "${aws_lb_target_group.target_group.arn}" # Reference the target group
     container_name   = "${aws_ecs_task_definition.app_task.family}"
-    container_port   = 3000 # Specify the container port
+    container_port   = 80 # Specify the container port change the previous was 3000
   }
 
   network_configuration {
-    subnets          = ["${aws_subnet.main1.id}", "${aws_subnet.main2.id}"]
+    subnets          = ["${aws_subnet.main1.id}", "${aws_subnet.main2.id}", "${aws_subnet.main3.id}"]
     assign_public_ip = true     # Provide the containers with public IPs
     security_groups  = ["${aws_security_group.securitychallenge.id}"] # Set up the security group i need to see if be challenge
   }
 }
+ 
+
+
+
+
+/* 
+
+
+
+
+
+
+
+data "aws_iam_policy_document" "ConfLambda" {
+  statement {
+    sid     = "visual1"
+    effect  = "Allow"
+    actions = [ "*",
+                "logs:CreateLogStream",
+                "s3:ListAllMyBuckets",
+                "logs:CreateLogGroup",
+                "logs:PutLogEvents"]
+    resources = [aws_s3_bucket.depot.arn]
+    }
+
+  statement {
+    sid     = "visual2"
+    effect  = "Allow"
+    actions = [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:GetObjectVersion",
+                "s3:ListMultipartUploadParts"]
+    resources = [aws_s3_bucket.depot.arn]
+    }
+
+  statement {
+    actions   = ["rds:*"]
+    resources = [aws_db_instance.rds_instance.arn] 
+    effect    = "Allow"
+  }
+
+  statement {
+    actions = ["logs:CreateLogGroup",
+      "logs:CreateLogStream",
+    "logs:PutLogEvents"]
+    resources = ["*"]
+    effect    = "Allow"
+  }
+
+}
+
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "${var.database_name}_lambda_policy"
+  description = "${var.database_name}_lambda_policy"
+  policy      = data.aws_iam_policy_document.ConfLambda.json
+}
+
+
+resource "aws_iam_role" "s3_copy_function" {
+  name                  = "app_${var.database_name}_lambda"
+  force_detach_policies = true
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }, ]
+  })
+}
+
+
+resource "aws_iam_role_policy_attachment" "Join_between_policy_and_roles" {
+  role       = aws_iam_role.s3_copy_function.name 
+  policy_arn = aws_iam_policy.lambda_policy.arn   
+}
+
+resource "aws_lambda_permission" "allow_lambda_bucket" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.s3_copy_function.arn
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.depot.arn
+}
+
+resource "aws_s3_object" "folder1" {
+    bucket = aws_s3_bucket.depot.id
+    #acl    = "public"
+    key    = "datacsv/"
+}
+
+resource "aws_s3_bucket_notification" "bucket_terraform_notification" {
+   bucket             = "${aws_s3_bucket.depot.id}"
+   lambda_function {
+       lambda_function_arn  = "${aws_lambda_function.s3_copy_function.arn}"
+       events               = ["s3:ObjectCreated:*"]
+       filter_prefix        = "datacsv/"
+       filter_suffix        = ".csv"
+   }
+   depends_on = [ aws_lambda_permission.allow_lambda_bucket ]
+   
+}
+
+resource "aws_s3_object" "my_function_to_bucket" {
+  bucket = aws_s3_bucket.depot.id
+  key    = "${filemd5(local.my_function_source)}.zip"
+  source = local.my_function_source
+}
+
+
+resource "aws_lambda_function" "s3_copy_function" {
+  s3_bucket        = aws_s3_bucket.depot.id
+  s3_key           = aws_s3_object.my_function_to_bucket.key
+  source_code_hash = local.my_function_source # filebase64sha256(data.archive_file.my_lambda_function.output_path)
+  function_name    = "${var.database_name}_s3_copy_lambda"
+  role             = aws_iam_role.s3_copy_function.arn
+  handler          = "CopyS3.lambda_handler"
+  runtime          = "python3.8"
+  layers           = [module.layer.lambda_layer_arn]
+  environment {
+    variables = {
+      APP_DB_USER      = "${var.database_user}"
+      APP_DB_PASS      = "${var.database_password}"
+      APP_DB_NAME      = "${var.database_for_create_table}"
+      DB_HOST          = "${aws_db_instance.rds_instance.address}"
+      DB_INSTANCE_NAME = "${aws_db_instance.rds_instance.db_name}"
+      ENV              = "${var.env}"
+      PROJECT          = "${var.project}"
+      Serverless       = "Terraform"
+    }
+  }
+}
+
+/* resource "aws_s3_object" "my_libraries_to_bucket" {
+  bucket = aws_s3_bucket.depot.id
+  key    = "${filemd5(local.my_library_source)}.zip"
+  source = local.my_function_source
+} */
+
+/* module "layer" {
+  source              = "terraform-aws-modules/lambda/aws"
+  create_layer        = true
+  layer_name          = "dependencies_of_code"
+  description         = "You need to install the libraries"
+  compatible_runtimes = ["python3.8"]
+  source_path         = "C:/Users/gualtfor/Desktop/Machine Learning/Challengepython/app/libraries/build"
+  store_on_s3         = true
+  s3_bucket           = aws_s3_bucket.depot.id
+
+} */
+
+ 
