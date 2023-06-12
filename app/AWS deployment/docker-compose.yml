@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  app:
+    image: challenge:latest
+    container_name: challenge
+    hostname: app-server
+    restart: unless-stopped
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      labels:
+        - poc
+    volumes:
+        - .:/code
+    ports:
+      - 80:5432  # 80:80
+    networks:
+      - poc-net
+
+  db:
+    image: postgres
+    container_name: postgres-ch
+    restart: always
+    hostname: postgresdb
+    environment:
+      - POSTGRES_USER=gualtfor
+      - POSTGRES_PASSWORD=admin1234
+    depends_on:
+      - app
+ #   ports:
+ #     - '5432:80'
+    volumes: 
+      - db:/var/lib/postgresql/data
+    networks:
+      - poc-net
+volumes:
+  db:
+    driver: local
+
+networks:
+  poc-net:
+    external: false
