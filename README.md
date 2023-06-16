@@ -48,7 +48,7 @@ or if you do not want to deploy the API in your computer, please open in your br
 
  [http://54.224.14.179/docs](http://54.224.14.179/docs) o 
 
- [load-balancer-dev-2065286400.us-east-1.elb.amazonaws.com](load-balancer-dev-2065286400.us-east-1.elb.amazonaws.com)  
+ [http://load-balancer-dev-2065286400.us-east-1.elb.amazonaws.com](http://load-balancer-dev-2065286400.us-east-1.elb.amazonaws.com)  
  
  Everything is loading in the platform cloud of AWS.
  At the night all service will be turn off and the IP address can change.
